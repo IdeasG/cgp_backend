@@ -32,5 +32,60 @@ jobs:
             # Instalar dependencias
             npm install
             
+            # CONFIGURAR NGINX Y ENTORNO AUTOMATICAMENTE
+            echo "Creando archivo .env en el backend"
+            cat << 'EOF' > /root/cgp_backend/.env
+            PORT=3005
+            DATABASE_URL=postgresql://postgres:mP7%23zX%409qT%21kR4%26vGd2%24hLnF8sWj@84.247.176.139:5432/bdcgp
+            JWT_SECRET_KEY=cgp_super_secret_key
+            JWT_REFRESH_TOKEN_KEY=cgp_super_refresh_key
+            EOF
+            
+            echo "Creando configuracion Nginx para backend"
+            cat << 'EOF' > /etc/nginx/sites-available/cgpb.ideasg.org
+            server {
+                listen 80;
+                server_name cgpb.ideasg.org;
+                location / {
+                    proxy_pass http://localhost:3005;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+                }
+            }
+            EOF
+            
+            echo "Creando configuracion Nginx para frontend"
+            cat << 'EOF' > /etc/nginx/sites-available/cgp.ideasg.org
+            server {
+                listen 80;
+                server_name cgp.ideasg.org;
+                location / {
+                    proxy_pass http://localhost:3006;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+                }
+            }
+            EOF
+            
+            echo "Reiniciando Nginx"
+            ln -sf /etc/nginx/sites-available/cgpb.ideasg.org /etc/nginx/sites-enabled/
+            ln -sf /etc/nginx/sites-available/cgp.ideasg.org /etc/nginx/sites-enabled/
+            systemctl restart nginx
+            
+            # Moverse a la carpeta del proyecto en el servidor
+            cd /root/cgp_backend
+            
+            # Obtener los ultimos cambios de GitHub
+            git pull origin main
+            
+            # Instalar dependencias
+            npm install
+            
             # Reiniciar la aplicacion con PM2
             pm2 restart cgp-backend || pm2 start app.js --name "cgp-backend"
