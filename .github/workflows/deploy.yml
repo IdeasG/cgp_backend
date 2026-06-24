@@ -87,5 +87,6 @@ jobs:
             # Instalar dependencias
             npm install
             
-            # Reiniciar la aplicacion con PM2
-            pm2 restart cgp-backend || pm2 start app.js --name "cgp-backend"
+            # Reiniciar la aplicacion con PM2 (Borrando el proceso anterior para asegurar la ruta correcta)
+            pm2 delete cgp-backend || true
+            pm2 start app.js --name "cgp-backend"
