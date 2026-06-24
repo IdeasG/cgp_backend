@@ -17,6 +17,12 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # Si la carpeta no existe, clonar el proyecto por primera vez
+            if [ ! -d "/root/cgp_backend" ]; then
+              cd /root
+              git clone https://github.com/IdeasG/cgp_backend.git
+            fi
+            
             # Moverse a la carpeta del proyecto en el servidor
             cd /root/cgp_backend
             
